@@ -19,7 +19,8 @@
         app:layout_constraintRight_toLeftOf="@+id/acc_val_x_tv" />
     <TextView
         android:id="@+id/acc_val_x_tv"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
+        android:gravity="center"
         android:layout_height="50dp"
         android:textSize="32sp"
         android:text="0.0x"
@@ -43,7 +44,8 @@
         app:layout_constraintRight_toLeftOf="@+id/acc_val_y_tv" />
     <TextView
         android:id="@+id/acc_val_y_tv"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
+        android:gravity="center"
         android:layout_height="50dp"
         android:textSize="32sp"
         android:text="0.0y"
@@ -67,10 +69,11 @@
         app:layout_constraintRight_toLeftOf="@+id/acc_val_z_tv" />
     <TextView
         android:id="@+id/acc_val_z_tv"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="50dp"
         android:textSize="32sp"
         android:text="0.0z"
+        android:gravity="center"
         app:layout_constraintLeft_toRightOf="@+id/val_z"
         app:layout_constraintTop_toTopOf="@+id/val_z"
         app:layout_constraintBottom_toBottomOf="@+id/val_z"

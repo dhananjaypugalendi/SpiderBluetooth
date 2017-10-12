@@ -32,7 +32,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private static final String TAG="MainActivity";
     private static final int ENABLE_BT_REQUEST_CODE = 1;
-    private static final int SENSOR_FREQUENCY = 1000;
+    private static final int SENSOR_FREQUENCY = 250;
+
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private long lastUpdate=0;
@@ -50,13 +51,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     boolean deviceConnected;
     boolean stopThread;
     SharedPreferences sharedPreferences;
-
     TextView accValXTV;
     TextView accValYTV;
     TextView accValZTV;
     TextView deviceNameTV;
     ImageView directionIV;
 
+    //set layout
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,29 +69,32 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
+    //callback if the bluetooth was enabled successfully
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(TAG, "onActivityResult: ");
+        //Log.d(TAG, "onActivityResult: ");
         if(requestCode == ENABLE_BT_REQUEST_CODE){
             if(resultCode == Activity.RESULT_OK){
-                Log.d(TAG, "onActivityResult: bluetooth enabled");
+                //Log.d(TAG, "onActivityResult: bluetooth enabled");
                 Toast.makeText(getApplicationContext(), "bluetooth enabled", Toast.LENGTH_SHORT).show();
                 //scanForDevices();
                 getBondedDevices();
             }
             if(resultCode == Activity.RESULT_CANCELED){
-                Log.d(TAG, "onActivityResult: error occurred");
+                //Log.d(TAG, "onActivityResult: error occurred");
                 Toast.makeText(getApplicationContext(), "error occurred", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
+    //create options menu to display the edit icon
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.device_name, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
+    //create an intent to trigger DeviceNameActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId()==R.id.edit_device) {
@@ -101,18 +105,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         return true;
     }
 
+    //unregister listener to stop receiving accelerometer updates
     @Override
     protected void onPause() {
         super.onPause();
         sensorManager.unregisterListener(this);
     }
 
+    //register listener to resume receiving accelerometer updates
     @Override
     protected void onResume() {
         super.onResume();
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
+    //disconnect the device and free up resources
     @Override
     protected void onDestroy() {
         try {
@@ -123,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onDestroy();
     }
 
+    //initialize views, sensors,and bluetooth
     private void init() {
         accValXTV = (TextView) findViewById(R.id.acc_val_x_tv);
         accValYTV = (TextView) findViewById(R.id.acc_val_y_tv);
@@ -141,23 +149,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         adapter = BluetoothAdapter.getDefaultAdapter();
     }
 
+    //intent to enable bluetooth
     private void checkAndEnableBluetooth() {
         if(adapter == null){
-            Log.d(TAG, "checkAndEnableBluetooth: this device doesnt support bluetooth");
+            //Log.d(TAG, "checkAndEnableBluetooth: this device doesnt support bluetooth");
             Toast.makeText(getApplicationContext(), "this device doesnt support bluetooth", Toast.LENGTH_SHORT).show();
         }else {
             if(!adapter.isEnabled()){
                 Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableIntent, ENABLE_BT_REQUEST_CODE);
-                Log.d(TAG, "checkAndEnableBluetooth: enabling bluetooth");
+                //Log.d(TAG, "checkAndEnableBluetooth: enabling bluetooth");
                 Toast.makeText(getApplicationContext(), "enabling bluetooth", Toast.LENGTH_SHORT).show();
             }else {
-                Log.d(TAG, "checkAndEnableBluetooth: bluetooth already enabled");
+                //Log.d(TAG, "checkAndEnableBluetooth: bluetooth already enabled");
                 getBondedDevices();
             }
         }
     }
 
+    //get already bonded devices
     private void getBondedDevices() {
         Set<BluetoothDevice> bondedDevices = adapter.getBondedDevices();
         if(bondedDevices.isEmpty()) {
@@ -165,25 +175,30 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
         else {
             for (BluetoothDevice iterator : bondedDevices) {
-                Log.d(TAG, "getBondedDevices: "+iterator.getName()+ "\t" + iterator.getAddress());
+                //Log.d(TAG, "getBondedDevices: "+iterator.getName()+ "\t" + iterator.getAddress());
                 if(iterator.getName().equals(deviceName)){
-                    Log.d(TAG, "getBondedDevices: device found");
+                    //Log.d(TAG, "getBondedDevices: device found");
                     device = iterator;
                     start();
                     break;
                 }
             }
+            if(device == null){
+                Toast.makeText(getApplicationContext(), "pair the device first", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
+    //connect to the microcontroller
     private boolean connectBluetoothDevice(){
-        Log.d(TAG, "connectBluetoothDevice: ");
+        //Log.d(TAG, "connectBluetoothDevice: ");
         boolean connected = true;
         try{
             socket = device.createRfcommSocketToServiceRecord(PORT_UUID);
             socket.connect();
+            Toast.makeText(getApplicationContext(), "connected", Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
-            Log.d(TAG, "connectBluetoothDevice: exception");
+            //Log.d(TAG, "connectBluetoothDevice: exception");
             Toast.makeText(getApplicationContext(), "not connected", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
             connected = false;
@@ -203,8 +218,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         return connected;
     }
 
+    //listen for the microcontroller data
     private void listenForData(){
-        Log.d(TAG, "listenForData: ");
+        //Log.d(TAG, "listenForData: ");
         final Handler handler = new Handler();
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -233,34 +249,48 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         thread.start();
     }
 
+    //send string data to microcontroller
     private void sendData(String s){
         try{
             outputStream.write(s.getBytes());
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Log.d(TAG, "sendData: "+s);
+        //Log.d(TAG, "sendData: "+s);
     }
 
+    //send integer data to microcontroller
+    private void sendData(int i){
+        try{
+            outputStream.write(i);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //Log.d(TAG, "sendData: "+i);
+    }
+
+    //start connection procedures
     private void start(){
-        Log.d(TAG, "start: ");
+        //Log.d(TAG, "start: ");
         if(connectBluetoothDevice()){
             deviceConnected = true;
-            Log.d(TAG, "start: device connected");
+            //Log.d(TAG, "start: device connected");
             //listenForData();
         }
     }
 
+    //end connection and release the resources
     private void stop() throws IOException{
-        Log.d(TAG, "stop: ");
+        //Log.d(TAG, "stop: ");
         stopThread = true;
         if(outputStream!=null) outputStream.close();
         if(inputStream!=null) inputStream.close();
         if(socket!=null) socket.close();
         deviceConnected = false;
-        Log.d(TAG, "stop: connection closed");
+        //Log.d(TAG, "stop: connection closed");
     }
 
+    //called every time the sensor value changes
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         double x = sensorEvent.values[0];
@@ -270,39 +300,40 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         long currTime = System.currentTimeMillis();
         if(currTime - lastUpdate > SENSOR_FREQUENCY){
             lastUpdate = currTime;
-            String s;
+            int s;
             x = Math.round(x * 100.0) / 100.0;
             y = Math.round(y * 100.0) / 100.0;
             z = Math.round(z * 100.0) / 100.0;
             accValXTV.setText(String.valueOf(x));
             accValYTV.setText(String.valueOf(y));
             accValZTV.setText(String.valueOf(z));
-            Log.d(TAG, "onSensorChanged: "+x+" "+y+" "+z);
+            //Log.d(TAG, "onSensorChanged: "+x+" "+y+" "+z);
             //s=(x>0?"+":"-")+Math.abs((int)x)+""+(y>0?"+":"-")+Math.abs((int)y)+""+(z>0?"+":"-")+Math.abs((int)z)+"!";
             if(y>6) {
-                s="1"; //backward
+                s=1; //backward
                 directionIV.setImageResource(R.drawable.ic_chevron_down);
             }
             else if(y<-4) {
-                s="2"; //forward
+                s=2; //forward
                 directionIV.setImageResource(R.drawable.ic_chevron_up);
             }
             else if(x<-6) {
-                s="3"; //right
+                s=3; //right
                 directionIV.setImageResource(R.drawable.ic_chevron_right);
             }
             else if(x>6) {
-                s="4"; //left
+                s=4; //left
                 directionIV.setImageResource(R.drawable.ic_chevron_left);
             }
             else {
-                s="0"; //idle
+                s=0; //idle
                 directionIV.setImageResource(R.drawable.ic_target);
             }
             if(deviceConnected) sendData(s);
         }
     }
 
+    //called every time sensor accuracy changes
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
     }

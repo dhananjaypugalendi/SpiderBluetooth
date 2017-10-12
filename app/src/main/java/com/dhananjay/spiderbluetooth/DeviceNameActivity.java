@@ -17,6 +17,7 @@ public class DeviceNameActivity extends AppCompatActivity {
     private EditText deviceNameET;
     private Button confirmBt;
 
+    //set view
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -25,6 +26,7 @@ public class DeviceNameActivity extends AppCompatActivity {
         init();
     }
 
+    //initialize views
     private void init() {
         deviceNameET = (EditText) findViewById(R.id.device_name_et);
         confirmBt = (Button) findViewById(R.id.confirm_bt);
@@ -32,12 +34,16 @@ public class DeviceNameActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if(!deviceNameET.getText().toString().equals("")){
-                    PreferenceManager.getDefaultSharedPreferences(getApplication()).edit().putString(PREF_KEY_DEVICE_NAME, deviceNameET.getText().toString()).apply();
+
+                    PreferenceManager.getDefaultSharedPreferences(getApplication()).edit()
+                            .putString(PREF_KEY_DEVICE_NAME, deviceNameET.getText().toString())
+                            .apply();//set the device name
                     Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                    startActivity(intent);
+                    startActivity(intent);//goto main activity
                     finish();
                 }else{
-                    Toast.makeText(getApplicationContext(), "enter valid name",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "enter valid name",Toast.LENGTH_SHORT)
+                            .show();//show error message
                 }
             }
         });
